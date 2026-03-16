@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNA & Chromosomes Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Oswald:wght@500;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --sky-top:#0d0d2e;--sky-mid:#1a2a6c;--sky-low:#b21f1f;--sky-bottom:#fdbb2d;
+  --accent:#f3d43b;--correct:#7fd13b;--wrong:#e84040;
+  --btn-bg:rgba(255,255,255,0.10);--btn-border:rgba(255,255,255,0.28);
+  --btn-hover:rgba(255,255,255,0.20);--btn-sel:#3a5ecf;
+  --dark:#1a1a3e;--card:#ffffff;--timer-red:#e84040;
+  --lv1:#4fc3f7;--lv2:#81c784;--lv3:#ffb74d;--lv4:#f06292;--lv5:#ce93d8;
+}
+html,body{min-height:100%;font-family:'Nunito',sans-serif;}
+body{background:linear-gradient(170deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-low) 80%,var(--sky-bottom) 100%);
+  display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto;}
+
+/* stars */
+.stars{position:fixed;top:0;left:0;width:100%;height:65%;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d) ease-in-out infinite alternate;}
+@keyframes twinkle{from{opacity:.15}to{opacity:.9}}
+
+.screen{display:none;width:100%;max-width:720px;position:relative;z-index:1;margin:auto;}
+.screen.active{display:block;}
+
+/* ===== DNA HELIX DECO ===== */
+.deco{text-align:center;font-size:1.8rem;letter-spacing:4px;margin-bottom:6px;animation:spin 8s linear infinite;}
+@keyframes spin{from{letter-spacing:4px}50%{letter-spacing:8px}to{letter-spacing:4px}}
+
+/* ===== SHARED CARD ===== */
+.card{background:rgba(255,255,255,0.95);border-radius:20px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.45);margin-bottom:14px;}
+.card h2{font-family:'Oswald',sans-serif;font-size:1.4rem;color:var(--dark);margin-bottom:18px;letter-spacing:1px;}
+
+/* ===== LEVEL BADGE ===== */
+.level-badge{display:inline-flex;align-items:center;gap:6px;border-radius:50px;padding:5px 14px;
+  font-family:'Oswald',sans-serif;font-size:0.85rem;letter-spacing:1px;font-weight:700;margin-bottom:12px;}
+.level-badge.lv1{background:#e1f5fe;color:#0277bd;}
+.level-badge.lv2{background:#e8f5e9;color:#2e7d32;}
+.level-badge.lv3{background:#fff3e0;color:#e65100;}
+.level-badge.lv4{background:#fce4ec;color:#c62828;}
+.level-badge.lv5{background:#f3e5f5;color:#6a1b9a;}
+
+/* ===== LEVEL DOTS ===== */
+.level-dots{display:flex;justify-content:center;gap:8px;margin-bottom:16px;}
+.ldot{width:28px;height:8px;border-radius:4px;background:rgba(255,255,255,0.2);transition:background .3s;}
+.ldot.done{background:var(--accent);}
+.ldot.active{background:white;}
+
+/* ===== LOGIN ===== */
+#login-screen{text-align:center;padding:16px 0;}
+#login-screen h1{font-family:'Oswald',sans-serif;font-size:clamp(1.8rem,5vw,3rem);color:var(--accent);
+  text-shadow:0 2px 20px rgba(0,0,0,.6);letter-spacing:2px;margin-bottom:4px;}
+.subtitle{color:rgba(255,255,255,.85);font-size:.95rem;margin-bottom:20px;font-weight:700;}
+.input-group{margin-bottom:14px;text-align:left;}
+.input-group label{display:block;font-weight:800;color:var(--dark);font-size:.82rem;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.input-group input{width:100%;padding:11px 15px;border:2px solid #dde;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;color:var(--dark);background:#f8f9ff;outline:none;transition:border-color .2s;}
+.input-group input:focus{border-color:var(--btn-sel);}
+.input-group input::placeholder{color:#aab;font-weight:400;}
+.input-error{color:#e84040;font-size:.8rem;margin-top:3px;display:none;font-weight:700;}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:#aab;font-size:.82rem;font-weight:700;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#dde;}
+.returning-list{max-height:150px;overflow-y:auto;margin-bottom:14px;}
+.ri{display:flex;align-items:center;justify-content:space-between;background:#f0f4ff;border:1.5px solid #dde;
+  border-radius:10px;padding:9px 13px;margin-bottom:7px;cursor:pointer;transition:background .15s,border-color .15s;}
+.ri:hover{background:#e4ebff;border-color:var(--btn-sel);}
+.ri-name{font-weight:800;color:var(--dark);font-size:.9rem;}
+.ri-meta{font-size:.75rem;color:#888;}
+.ri-score{font-family:'Oswald',sans-serif;font-size:1rem;color:var(--btn-sel);}
+.btn-main{font-family:'Oswald',sans-serif;font-size:1.2rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#f3d43b,#e8a020);color:var(--dark);border:none;border-radius:50px;
+  padding:12px 44px;cursor:pointer;font-weight:700;box-shadow:0 8px 24px rgba(243,212,59,.4);
+  transition:transform .15s,box-shadow .15s;width:100%;}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(243,212,59,.5);}
+.small-link{color:rgba(255,255,255,.55);font-size:.78rem;cursor:pointer;margin-top:8px;display:inline-block;text-decoration:underline;}
+.small-link:hover{color:rgba(255,255,255,.9);}
+
+/* ===== START SCREEN ===== */
+#start-screen{text-align:center;padding:14px 0;}
+#start-screen h1{font-family:'Oswald',sans-serif;font-size:clamp(1.8rem,5vw,2.8rem);color:var(--accent);text-shadow:0 2px 20px rgba(0,0,0,.6);letter-spacing:2px;margin-bottom:4px;}
+.welcome-tag{color:rgba(255,255,255,.9);font-size:.95rem;font-weight:700;margin-bottom:16px;}
+.welcome-tag span{color:var(--accent);}
+.hist-banner{background:#f0f4ff;border:1.5px solid #c5d0f0;border-radius:12px;padding:11px 15px;margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.hist-banner.hidden{display:none;}
+.hb-label{font-size:.75rem;color:#888;font-weight:700;}
+.hb-val{font-family:'Oswald',sans-serif;font-size:1.1rem;color:var(--btn-sel);}
+.levels-preview{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px;}
+.lp-item{border-radius:10px;padding:10px 4px;text-align:center;}
+.lp-item.lv1{background:#e1f5fe;}.lp-item.lv2{background:#e8f5e9;}.lp-item.lv3{background:#fff3e0;}.lp-item.lv4{background:#fce4ec;}.lp-item.lv5{background:#f3e5f5;}
+.lp-num{font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;}
+.lp-num.lv1{color:#0277bd;}.lp-num.lv2{color:#2e7d32;}.lp-num.lv3{color:#e65100;}.lp-num.lv4{color:#c62828;}.lp-num.lv5{color:#6a1b9a;}
+.lp-name{font-size:.65rem;color:#666;font-weight:700;line-height:1.2;margin-top:3px;}
+
+/* ===== GAME SCREEN ===== */
+.top-bar{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(10,10,50,.8);backdrop-filter:blur(8px);
+  border-radius:16px 16px 0 0;padding:9px 16px;border:1px solid rgba(255,255,255,.15);border-bottom:none;}
+.q-label{font-family:'Oswald',sans-serif;font-size:1rem;color:#fff;letter-spacing:1px;}
+.q-label span{color:var(--accent);}
+.timer-disp{display:flex;align-items:center;gap:5px;font-family:'Oswald',sans-serif;font-size:1.4rem;color:#fff;letter-spacing:2px;transition:color .3s;}
+.timer-disp.urgent{color:var(--timer-red);animation:pulse .6s ease-in-out infinite alternate;}
+@keyframes pulse{from{opacity:1}to{opacity:.4}}
+.score-disp{font-family:'Oswald',sans-serif;font-size:.95rem;color:var(--accent);letter-spacing:1px;}
+.pb-wrap{height:6px;background:rgba(255,255,255,.12);overflow:hidden;position:relative;}
+.pb-inner{height:100%;background:var(--accent);transition:width .4s;}
+.pb-seg{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.25);}
+.question-card{background:rgba(255,255,255,.95);padding:20px 24px 16px;
+  border-left:1px solid rgba(255,255,255,.12);border-right:1px solid rgba(255,255,255,.12);}
+.lv-chip{display:inline-block;border-radius:50px;padding:2px 10px;font-size:.72rem;font-weight:800;letter-spacing:.5px;margin-bottom:8px;}
+.lv-chip.lv1{background:#e1f5fe;color:#0277bd;}.lv-chip.lv2{background:#e8f5e9;color:#2e7d32;}
+.lv-chip.lv3{background:#fff3e0;color:#e65100;}.lv-chip.lv4{background:#fce4ec;color:#c62828;}.lv-chip.lv5{background:#f3e5f5;color:#6a1b9a;}
+.q-text{font-size:clamp(.9rem,2.4vw,1.1rem);font-weight:700;color:var(--dark);line-height:1.5;min-height:52px;}
+.choices-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:13px 18px;
+  background:rgba(10,10,50,.65);backdrop-filter:blur(8px);
+  border-left:1px solid rgba(255,255,255,.08);border-right:1px solid rgba(255,255,255,.08);}
+.choice-btn{background:var(--btn-bg);border:1.5px solid var(--btn-border);border-radius:10px;color:#fff;
+  font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:700;padding:10px 13px;cursor:pointer;
+  text-align:center;transition:background .15s,border-color .15s,transform .1s;
+  min-height:48px;display:flex;align-items:center;justify-content:center;line-height:1.3;}
+.choice-btn:hover:not(:disabled){background:var(--btn-hover);border-color:rgba(255,255,255,.6);transform:translateY(-1px);}
+.choice-btn.selected{background:var(--btn-sel);border-color:rgba(255,255,255,.8);}
+.choice-btn:disabled{cursor:default;}
+.choice-btn.correct-reveal{background:rgba(127,209,59,.35);border-color:var(--correct);}
+.choice-btn.wrong-reveal{background:rgba(232,64,64,.35);border-color:var(--wrong);}
+.bot-bar{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(10,10,50,.8);backdrop-filter:blur(8px);
+  border-radius:0 0 16px 16px;padding:10px 16px;border:1px solid rgba(255,255,255,.15);border-top:none;}
+.fb-text{font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:1px;min-width:130px;height:28px;display:flex;align-items:center;}
+.fb-text.correct{color:var(--correct);}.fb-text.wrong{color:var(--wrong);}
+.btn-sub{font-family:'Oswald',sans-serif;font-size:.95rem;letter-spacing:2px;
+  background:rgba(255,255,255,.14);color:#fff;border:1.5px solid rgba(255,255,255,.38);
+  border-radius:50px;padding:7px 24px;cursor:pointer;transition:background .15s,transform .1s;}
+.btn-sub:hover:not(:disabled){background:rgba(255,255,255,.24);transform:translateY(-1px);}
+.btn-sub:disabled{opacity:.4;cursor:default;}
+.btn-sub.done{background:var(--accent);color:var(--dark);border-color:var(--accent);}
+.fb-overlay{position:absolute;inset:0;border-radius:16px;pointer-events:none;z-index:10;opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center;}
+.fb-overlay.show{opacity:1;pointer-events:auto;}
+.fb-overlay.cor{background:rgba(127,209,59,.1);}
+.fb-overlay.wrg{background:rgba(232,64,64,.07);}
+.fb-icon{font-size:4.5rem;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.pts-flash{position:absolute;top:14px;right:20px;font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:700;
+  pointer-events:none;animation:floatUp 1s ease-out forwards;z-index:20;}
+.pts-flash.pos{color:var(--correct);}.pts-flash.neg{color:var(--wrong);}
+@keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-55px)}}
+
+/* ===== LEVEL COMPLETE ===== */
+#level-complete{text-align:center;padding:16px 0;}
+.lc-card{background:rgba(255,255,255,.95);border-radius:20px;padding:28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin-bottom:14px;}
+.lc-badge{display:inline-block;font-size:3rem;margin-bottom:10px;animation:bounce .8s ease-in-out infinite alternate;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.lc-title{font-family:'Oswald',sans-serif;font-size:clamp(1.6rem,5vw,2.2rem);color:var(--dark);letter-spacing:2px;margin-bottom:4px;}
+.lc-sub{color:#888;font-size:.88rem;font-weight:700;margin-bottom:18px;}
+.lc-stats{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
+.lc-stat{background:#f0f4ff;border-radius:12px;padding:11px 16px;text-align:center;min-width:80px;}
+.lc-stat .sv{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;}
+.lc-stat .sv.g{color:#2e7d32;}.lc-stat .sv.r{color:#c62828;}.lc-stat .sv.b{color:var(--btn-sel);}
+.lc-stat .sl{font-size:.7rem;color:#888;font-weight:700;margin-top:2px;}
+.bonus-box{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:2px solid #a5d6a7;border-radius:14px;
+  padding:14px;margin-bottom:20px;}
+.bonus-box .bb-label{font-size:.8rem;color:#2e7d32;font-weight:800;margin-bottom:4px;}
+.bonus-box .bb-val{font-family:'Oswald',sans-serif;font-size:2rem;color:#1b5e20;letter-spacing:2px;}
+.next-level-preview{background:#f8f9ff;border-radius:12px;padding:12px;margin-bottom:20px;text-align:left;}
+.nlp-label{font-size:.75rem;color:#888;font-weight:800;margin-bottom:6px;letter-spacing:.5px;}
+.nlp-chip{display:inline-block;border-radius:50px;padding:3px 12px;font-size:.8rem;font-weight:800;letter-spacing:.5px;margin-bottom:6px;}
+.nlp-chip.lv1{background:#e1f5fe;color:#0277bd;}.nlp-chip.lv2{background:#e8f5e9;color:#2e7d32;}
+.nlp-chip.lv3{background:#fff3e0;color:#e65100;}.nlp-chip.lv4{background:#fce4ec;color:#c62828;}.nlp-chip.lv5{background:#f3e5f5;color:#6a1b9a;}
+.nlp-desc{font-size:.85rem;color:var(--dark);font-weight:700;}
+.btn-next-lv{font-family:'Oswald',sans-serif;font-size:1.2rem;letter-spacing:2px;
+  background:linear-gradient(135deg,#f3d43b,#e8a020);color:var(--dark);border:none;
+  border-radius:50px;padding:12px 44px;cursor:pointer;font-weight:700;
+  box-shadow:0 8px 24px rgba(243,212,59,.4);transition:transform .15s;}
+.btn-next-lv:hover{transform:translateY(-2px);}
+
+/* ===== END SCREEN ===== */
+#end-screen{text-align:center;padding:14px 0;}
+.end-title{font-family:'Oswald',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);color:var(--dark);letter-spacing:2px;margin-bottom:4px;}
+.end-student{color:#888;font-size:.85rem;font-weight:700;margin-bottom:4px;}
+.final-lbl{color:#555;font-size:.85rem;font-weight:600;margin-bottom:2px;}
+.final-score{font-family:'Oswald',sans-serif;font-size:clamp(3rem,10vw,4.2rem);color:var(--btn-sel);line-height:1;margin-bottom:2px;}
+.final-sub{color:#777;font-size:.82rem;margin-bottom:16px;}
+.score-break{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.si{text-align:center;background:#f0f4ff;border-radius:12px;padding:10px 14px;min-width:76px;}
+.si .sv{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;}
+.si .sv.g{color:#2e7d32;}.si .sv.r{color:#c62828;}
+.si .sl{font-size:.7rem;color:#888;font-weight:700;margin-top:2px;}
+.grade-badge{display:inline-block;background:linear-gradient(135deg,#f3d43b,#e8a020);color:var(--dark);
+  font-family:'Oswald',sans-serif;font-size:.95rem;letter-spacing:2px;padding:6px 18px;
+  border-radius:50px;font-weight:700;margin-bottom:14px;}
+.pb-badge-end{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;padding:7px 14px;
+  display:inline-block;margin-bottom:12px;font-size:.82rem;color:#2e7d32;font-weight:800;}
+.pb-badge-end.hidden{display:none;}
+.levels-summary{background:#f8f9ff;border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;}
+.levels-summary h3{font-family:'Oswald',sans-serif;font-size:.9rem;color:#555;letter-spacing:1px;margin-bottom:10px;}
+.ls-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #eef;font-size:.8rem;}
+.ls-row:last-child{border-bottom:none;}
+.ls-lv{font-weight:800;color:var(--dark);}
+.ls-score{font-family:'Oswald',sans-serif;font-size:.95rem;color:var(--btn-sel);}
+.ls-check{color:var(--correct);font-size:1rem;}
+.hist-section{background:#f8f9ff;border-radius:12px;padding:12px;margin-bottom:14px;text-align:left;}
+.hist-section h3{font-family:'Oswald',sans-serif;font-size:.9rem;color:#555;letter-spacing:1px;margin-bottom:8px;}
+.hr-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #eef;font-size:.8rem;}
+.hr-row:last-child{border-bottom:none;}
+.hr-date{color:#aab;}.hr-score{font-family:'Oswald',sans-serif;font-size:.9rem;color:var(--btn-sel);font-weight:700;}
+.end-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:6px;}
+.btn-copy{font-family:'Oswald',sans-serif;font-size:.95rem;letter-spacing:1px;background:var(--btn-sel);
+  color:#fff;border:none;border-radius:50px;padding:10px 22px;cursor:pointer;font-weight:700;transition:background .15s,transform .15s;}
+.btn-copy:hover{background:#2a4ebf;transform:translateY(-2px);}
+.btn-copy.copied{background:#2e7d32;}
+.btn-restart{font-family:'Oswald',sans-serif;font-size:.95rem;letter-spacing:1px;
+  background:linear-gradient(135deg,#f3d43b,#e8a020);color:var(--dark);border:none;
+  border-radius:50px;padding:10px 22px;cursor:pointer;font-weight:700;transition:transform .15s;}
+.btn-restart:hover{transform:translateY(-2px);}
+.gameover-note{background:#fff3e0;border:1.5px solid #ffb74d;border-radius:10px;padding:10px 14px;
+  margin-bottom:14px;font-size:.82rem;color:#e65100;font-weight:700;display:none;}
+
+/* ===== TEACHER ===== */
+#teacher-screen{padding:16px 0;}
+.tc-pw input{width:100%;max-width:240px;padding:10px 15px;border:2px solid #dde;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;color:var(--dark);background:#f8f9ff;
+  outline:none;text-align:center;letter-spacing:4px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;}
+.tc-pw input:focus{border-color:var(--btn-sel);}
+.btn-unlock{font-family:'Oswald',sans-serif;font-size:.95rem;letter-spacing:1px;background:var(--btn-sel);
+  color:#fff;border:none;border-radius:50px;padding:9px 24px;cursor:pointer;font-weight:700;}
+.tc-wrong{color:#e84040;font-size:.8rem;margin-top:6px;display:none;font-weight:700;}
+.tc-data{display:none;}
+.tc-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.ts{background:#f0f4ff;border-radius:10px;padding:9px 14px;text-align:center;flex:1;min-width:70px;}
+.ts .tv{font-family:'Oswald',sans-serif;font-size:1.4rem;color:var(--btn-sel);}
+.ts .tl{font-size:.7rem;color:#888;font-weight:700;}
+.tc-wrap{max-height:320px;overflow-y:auto;margin-bottom:14px;border-radius:10px;border:1px solid #dde;}
+table{width:100%;border-collapse:collapse;font-size:.8rem;}
+thead th{background:#f0f4ff;font-family:'Oswald',sans-serif;font-size:.75rem;letter-spacing:1px;color:#555;
+  padding:7px 10px;text-align:left;position:sticky;top:0;}
+tbody tr{border-bottom:1px solid #eef;}
+tbody tr:hover{background:#f8faff;}
+tbody tr:last-child{border-bottom:none;}
+td{padding:7px 10px;color:var(--dark);font-weight:600;}
+td.td-s{font-family:'Oswald',sans-serif;font-size:.95rem;color:var(--btn-sel);}
+.tc-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-exp{font-family:'Oswald',sans-serif;font-size:.85rem;letter-spacing:1px;background:var(--btn-sel);
+  color:#fff;border:none;border-radius:50px;padding:8px 18px;cursor:pointer;font-weight:700;transition:background .15s;}
+.btn-exp:hover{background:#2a4ebf;}
+.btn-clr{font-family:'Oswald',sans-serif;font-size:.85rem;letter-spacing:1px;background:#f0f4ff;
+  color:#e84040;border:1.5px solid #e84040;border-radius:50px;padding:8px 18px;cursor:pointer;font-weight:700;}
+.btn-clr:hover{background:#ffe4e4;}
+.btn-back{font-family:'Oswald',sans-serif;font-size:.85rem;letter-spacing:1px;background:transparent;
+  color:rgba(255,255,255,.7);border:1.5px solid rgba(255,255,255,.4);border-radius:50px;padding:8px 18px;
+  cursor:pointer;font-weight:700;margin-top:10px;}
+.btn-back:hover{color:#fff;border-color:#fff;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<!-- ==================== LOGIN ==================== -->
+<div class="screen active" id="login-screen">
+  <div class="deco">🌱 ☀️ 💧</div>
+  <h1>PLANT QUEST</h1>
+  <p class="subtitle">Xylem · Photosynthesis · Matter · Transpiration · Diagrams</p>
+  <div class="card">
+    <h2 id="login-heading">👤 SIGN IN</h2>
+
+    <div class="input-group">
+      <label for="name-in">Your Full Name</label>
+      <input type="text" id="name-in" placeholder="e.g. Maria Garcia" autocomplete="name" maxlength="40"/>
+      <div class="input-error" id="name-err">Please enter your full name.</div>
+    </div>
+
+    <div class="input-group">
+      <label for="period-in">Class Period</label>
+      <select id="period-in" style="width:100%;padding:11px 15px;border:2px solid #dde;border-radius:10px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;color:#1a1a3e;background:#f8f9ff;outline:none;appearance:none;cursor:pointer;">
+        <option value="">— Select your period —</option>
+      </select>
+      <div class="input-error" id="period-err">Please select your class period.</div>
+    </div>
+
+    <!-- Status badge: shown once name+period are filled -->
+    <div id="student-status" style="display:none;margin-bottom:12px;padding:9px 14px;border-radius:10px;font-size:.82rem;font-weight:800;"></div>
+
+    <!-- Returning student: single password field -->
+    <div id="pw-group" class="input-group" style="display:none;">
+      <label for="pw-in">Your Password</label>
+      <input type="password" id="pw-in" placeholder="Enter your password" maxlength="30"/>
+      <div class="input-error" id="pw-err">Incorrect password. Try again.</div>
+    </div>
+
+    <!-- New student: create + confirm -->
+    <div id="pw-new-group" style="display:none;">
+      <div class="input-group">
+        <label for="pw-new-in">Create a Password</label>
+        <input type="password" id="pw-new-in" placeholder="Pick something you'll remember" maxlength="30"/>
+        <div class="input-error" id="pw-new-err">Password must be at least 3 characters.</div>
+      </div>
+      <div class="input-group">
+        <label for="pw-confirm-in">Confirm Password</label>
+        <input type="password" id="pw-confirm-in" placeholder="Type it again" maxlength="30"/>
+        <div class="input-error" id="pw-confirm-err">Passwords don't match.</div>
+      </div>
+    </div>
+
+    <button class="btn-main" id="login-btn" onclick="loginStudent()">LET'S GO →</button>
+
+    <div id="ret-section" style="display:none;margin-top:14px;">
+      <div class="divider">RETURNING STUDENT? CLICK YOUR NAME</div>
+      <div class="returning-list" id="ret-list"></div>
+    </div>
+  </div>
+  <span class="small-link" onclick="showTeacher()">Teacher View</span>
+</div>
+
+<!-- ==================== START SCREEN ==================== -->
+<div class="screen" id="start-screen">
+  <div class="deco">🌱 ☀️ 💧</div>
+  <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(1.8rem,5vw,2.8rem);color:var(--accent);text-shadow:0 2px 20px rgba(0,0,0,.6);letter-spacing:2px;margin-bottom:4px;text-align:center;">PLANT QUEST</h1>
+  <p class="welcome-tag" style="text-align:center;">Welcome, <span id="welcome-name">Student</span> · <span id="welcome-period" style="opacity:.8;">Period</span></p>
+  <div class="card">
+    <div class="hist-banner hidden" id="hist-banner">
+      <span style="font-size:1.4rem;">🏆</span>
+      <div><div class="hb-label">YOUR BEST</div><div class="hb-val" id="hist-best">—</div></div>
+      <div style="margin-left:auto;text-align:right;"><div class="hb-label">PLAYS</div><div class="hb-val" id="hist-plays">0</div></div>
+    </div>
+    <div class="levels-preview">
+      <div class="lp-item lv1"><div class="lp-num lv1">1</div><div class="lp-name">Xylem & Phloem</div></div>
+      <div class="lp-item lv2"><div class="lp-num lv2">2</div><div class="lp-name">Photosynthesis</div></div>
+      <div class="lp-item lv3"><div class="lp-num lv3">3</div><div class="lp-name">Conservation</div></div>
+      <div class="lp-item lv4"><div class="lp-num lv4">4</div><div class="lp-name">Transpiration</div></div>
+      <div class="lp-item lv5"><div class="lp-num lv5">5</div><div class="lp-name">Root Tip Diagram</div></div>
+    </div>
+    <div style="background:#f0f4ff;border-radius:12px;padding:12px;font-size:.82rem;color:#555;font-weight:700;margin-bottom:18px;text-align:center;line-height:1.8;">
+      ✅ Correct → <strong style="color:#2e7d32;">+5 sec</strong> &nbsp;|&nbsp;
+      ❌ Wrong → <strong style="color:#c62828;">−1 sec</strong> &nbsp;|&nbsp;
+      ⭐ Level Clear → <strong style="color:#0277bd;">+15 sec bonus</strong>
+    </div>
+    <button class="btn-main" onclick="startGame()" style="display:block;text-align:center;">START LEVEL 1</button>
+  </div>
+  <span class="small-link" onclick="logout()">← Switch Student</span>
+</div>
+
+<!-- ==================== GAME SCREEN ==================== -->
+<div class="screen" id="game-screen" style="position:relative;">
+  <div class="fb-overlay" id="fb-overlay"><span class="fb-icon" id="fb-icon"></span></div>
+  <div class="top-bar">
+    <div class="q-label">Q <span id="q-num">1</span>/10 <span id="lv-indicator" style="opacity:.7;font-size:.85rem;"> · LV1</span></div>
+    <div class="timer-disp" id="timer-disp"><span>⏱</span><span id="timer-txt">0:30</span></div>
+    <div class="score-disp">PTS: <span id="score-disp">0</span></div>
+  </div>
+  <div class="pb-wrap" id="pb-wrap">
+    <div class="pb-inner" id="pb-inner" style="width:0%"></div>
+  </div>
+  <div class="question-card">
+    <span class="lv-chip" id="lv-chip">LEVEL 1</span>
+    <div id="q-diagram" style="display:none;background:#f5f5f5;border:1.5px solid #ddd;border-radius:10px;padding:10px;margin-bottom:10px;text-align:center;"></div>
+    <p class="q-text" id="q-text">Loading...</p>
+  </div>
+  <div class="choices-grid">
+    <button class="choice-btn" id="c0" onclick="pick(0)"></button>
+    <button class="choice-btn" id="c1" onclick="pick(1)"></button>
+    <button class="choice-btn" id="c2" onclick="pick(2)"></button>
+    <button class="choice-btn" id="c3" onclick="pick(3)"></button>
+  </div>
+  <div class="bot-bar">
+    <div class="fb-text" id="fb-text"></div>
+    <button class="btn-sub" id="sub-btn" onclick="submitAns()" disabled>SUBMIT</button>
+  </div>
+</div>
+
+<!-- ==================== LEVEL COMPLETE ==================== -->
+<div class="screen" id="level-complete">
+  <div class="lc-card">
+    <div class="lc-badge" id="lc-badge">⭐</div>
+    <div class="lc-title" id="lc-title">LEVEL 1 CLEAR!</div>
+    <div class="lc-sub" id="lc-sub">Cell Structures</div>
+    <div class="level-dots" id="lc-dots"></div>
+    <div class="lc-stats">
+      <div class="lc-stat"><div class="sv g" id="lc-correct">0</div><div class="sl">CORRECT</div></div>
+      <div class="lc-stat"><div class="sv r" id="lc-wrong">0</div><div class="sl">WRONG</div></div>
+      <div class="lc-stat"><div class="sv b" id="lc-pts">0</div><div class="sl">POINTS</div></div>
+    </div>
+    <div class="bonus-box">
+      <div class="bb-label">⭐ LEVEL COMPLETION BONUS</div>
+      <div class="bb-val">+15 SECONDS</div>
+    </div>
+    <div class="next-level-preview" id="next-preview">
+      <div class="nlp-label">UP NEXT</div>
+      <div class="nlp-chip" id="nlp-chip">LEVEL 2</div>
+      <div class="nlp-desc" id="nlp-desc">DNA Structure</div>
+    </div>
+    <button class="btn-next-lv" id="btn-next-lv" onclick="startNextLevel()">LEVEL 2 →</button>
+  </div>
+</div>
+
+<!-- ==================== END SCREEN ==================== -->
+<div class="screen" id="end-screen">
+  <div class="card">
+    <div class="end-title" id="end-title">GAME OVER</div>
+    <div class="end-student" id="end-student"></div>
+    <div class="gameover-note" id="gameover-note">⏰ Time ran out during Level <span id="fail-level">1</span></div>
+    <div class="final-lbl">FINAL SCORE</div>
+    <div class="final-score" id="final-score">0</div>
+    <div class="final-sub" id="final-sub">points earned</div>
+    <div class="score-break">
+      <div class="si"><div class="sv g" id="tot-correct">0</div><div class="sl">CORRECT</div></div>
+      <div class="si"><div class="sv r" id="tot-wrong">0</div><div class="sl">WRONG</div></div>
+      <div class="si"><div class="sv" id="lv-reached">1</div><div class="sl">LEVELS</div></div>
+    </div>
+    <div class="grade-badge" id="grade-badge">Keep Going!</div><br>
+    <div class="pb-badge-end hidden" id="pb-badge">🌟 New Personal Best!</div>
+
+    <div class="levels-summary" id="levels-summary">
+      <h3>LEVEL BREAKDOWN</h3>
+      <div id="ls-rows"></div>
+    </div>
+    <div class="hist-section">
+      <h3>YOUR HISTORY</h3>
+      <div id="hist-rows"></div>
+    </div>
+    <div class="end-actions">
+      <button class="btn-copy" id="copy-btn" onclick="copyScore()">📋 COPY SCORE</button>
+      <button class="btn-restart" onclick="goStart()">▶ PLAY AGAIN</button>
+    </div>
+    <div style="margin-top:8px;"><span class="small-link" onclick="logout()">← Switch Student</span></div>
+  </div>
+</div>
+
+<!-- ==================== TEACHER ==================== -->
+<div class="screen" id="teacher-screen">
+  <div class="card">
+    <h2>🔒 TEACHER VIEW</h2>
+    <p style="color:#888;font-size:.8rem;margin-bottom:18px;">Scores saved locally on this device.</p>
+    <div class="tc-pw" id="tc-pw-gate" style="text-align:center;">
+      <p style="font-size:.82rem;color:#888;font-weight:700;margin-bottom:10px;">Enter teacher password</p>
+      <input type="password" id="tc-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')unlockTC()" style="display:block;margin:0 auto 10px;"/>
+      <button class="btn-unlock" onclick="unlockTC()">UNLOCK</button>
+      <div class="tc-wrong" id="tc-wrong" style="display:none;">Incorrect password.</div>
+    </div>
+    <div class="tc-data" id="tc-data">
+      <div class="tc-stats" id="tc-stats"></div>
+      <div class="tc-wrap"><table>
+        <thead><tr><th>STUDENT</th><th>PERIOD</th><th>BEST</th><th>PLAYS</th><th>BEST LVL</th><th>LAST PLAYED</th></tr></thead>
+        <tbody id="tc-tbody"></tbody>
+      </table></div>
+      <div class="tc-actions">
+        <button class="btn-exp" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn-clr" onclick="clearData()">🗑 Clear All</button>
+      </div>
+    </div>
+  </div>
+  <button class="btn-back" onclick="showLogin()">← Back</button>
+</div>
+
+<script>
+/* ============================================================
+   ⚙️  SETTINGS
+============================================================ */
+const QUIZ_TITLE       = "Plant Biology Quest";
+const START_SECS       = 120;
+const SECS_RIGHT       = 5;
+const SECS_WRONG       = 1;
+const LEVEL_BONUS_SECS = 15;
+const TEACHER_PW       = "biology2026";
+const STORAGE_KEY      = "plant_quest_scores";
+
+/* Banned names — case-insensitive */
+const BANNED_NAMES = [
+  "admin","teacher","test","anonymous","anon",
+  "student","user","name","null","undefined"
+];
+
+/* Class periods — edit to match your schedule */
+const PERIODS = [
+  "Period 1","Period 2","Period 3","Period 4",
+  "Period 5","Period 6","Period 7","Period 8"
+];
+
+const LEVELS = [
+  /* ====================================================
+     LEVEL 1 — XYLEM & PHLOEM
+  ==================================================== */
+  {
+    name: "Xylem & Phloem",
+    color: "lv1",
+    emoji: "🌿",
+    desc: "Plant transport tissues",
+    questions: [
+      { q: "Which tissue transports water and minerals from the roots to the leaves?",
+        a: ["Xylem","Phloem"],
+        correct: 0 },
+      { q: "Which tissue transports sugar made in the leaves to the rest of the plant?",
+        a: ["Xylem","Phloem"],
+        correct: 1 },
+      { q: "A plant wilts after losing water. Which tissue is most directly affected?",
+        a: ["Xylem","Phloem"],
+        correct: 0 },
+      { q: "Which tissue carries the products of photosynthesis?",
+        a: ["Xylem","Phloem"],
+        correct: 1 },
+      { q: "A celery stalk is placed in blue-dyed water. The blue color travels upward through small tubes. Which tissue is stained blue?",
+        a: ["Xylem","Phloem"],
+        correct: 0 },
+      { q: "Which tissue moves sugar from the leaves down to the roots?",
+        a: ["Xylem","Phloem"],
+        correct: 1 },
+      { q: "Water absorbed by root hairs enters which tissue to travel up the plant?",
+        a: ["Xylem","Phloem"],
+        correct: 0 },
+      { q: "A fruit needs sugar to grow. Which tissue delivers sugar to the fruit?",
+        a: ["Xylem","Phloem"],
+        correct: 1 },
+      { q: "Which tissue moves water upward — from roots toward leaves?",
+        a: ["Phloem","Xylem"],
+        correct: 1 },
+      { q: "Which tissue moves sugar downward — from leaves toward roots?",
+        a: ["Phloem","Xylem"],
+        correct: 0 }
+    ]
+  },
+
+  /* ====================================================
+     LEVEL 2 — PHOTOSYNTHESIS REACTANTS & PRODUCTS
+  ==================================================== */
+  {
+    name: "Photosynthesis",
+    color: "lv2",
+    emoji: "☀️",
+    desc: "Reactants and products",
+    questions: [
+      { q: "Is CO₂ a reactant or a product of photosynthesis?",
+        a: ["Product — it is released","Reactant — it is used up","Neither — it is not involved","Both at the same time"],
+        correct: 1 },
+      { q: "Is H₂O (water) a reactant or a product of photosynthesis?",
+        a: ["Product only","Neither","Reactant — it is used up","Both equally"],
+        correct: 2 },
+      { q: "Is O₂ (oxygen) a reactant or a product of photosynthesis?",
+        a: ["Reactant — it is used up","Neither","Both","Product — it is released"],
+        correct: 3 },
+      { q: "Is glucose (C₆H₁₂O₆) a reactant or a product of photosynthesis?",
+        a: ["Reactant — it is used up","Neither","Both","Product — it is made"],
+        correct: 3 },
+      { q: "Which are the TWO reactants of photosynthesis?",
+        a: ["Glucose and oxygen","Carbon dioxide and water","Oxygen and glucose","Water and oxygen"],
+        correct: 1 },
+      { q: "Which are the TWO products of photosynthesis?",
+        a: ["Carbon dioxide and water","Water and carbon dioxide","Carbon dioxide and oxygen","Glucose and oxygen"],
+        correct: 3 },
+      { q: "Where does the carbon in glucose come from during photosynthesis?",
+        a: ["From water (H₂O)","From oxygen gas","From carbon dioxide (CO₂) in the air","From minerals in the soil"],
+        correct: 2 },
+      { q: "Where does the oxygen released by a plant during photosynthesis come from?",
+        a: ["From CO₂ being split apart","From glucose breaking down","From splitting water molecules (H₂O)","From minerals in the soil"],
+        correct: 2 },
+      { q: "Light energy in photosynthesis is used to:",
+        a: ["Release CO₂ into the air","Break down glucose into CO₂ and H₂O","Convert CO₂ and H₂O into glucose and O₂","Absorb water through the roots"],
+        correct: 2 },
+      { q: "Which equation correctly summarizes photosynthesis?",
+        a: ["Glucose + O₂ → CO₂ + H₂O + energy","CO₂ + H₂O + light → glucose + O₂","O₂ + glucose → CO₂ + H₂O","CO₂ + O₂ → glucose + H₂O"],
+        correct: 1 }
+    ]
+  },
+
+  /* ====================================================
+     LEVEL 3 — CONSERVATION OF MATTER
+  ==================================================== */
+  {
+    name: "Conservation of Matter",
+    color: "lv3",
+    emoji: "⚛️",
+    desc: "Atoms rearranged, never lost",
+    questions: [
+      { q: "The law of conservation of matter states that atoms are:",
+        a: ["Created during chemical reactions","Destroyed when energy is released","Neither created nor destroyed — rearranged into new molecules","Converted into energy"],
+        correct: 2 },
+      { q: "In photosynthesis, where do the carbon atoms in glucose come from?",
+        a: ["They are created by the plant","From water molecules","From CO₂ molecules taken in from the air","From the soil"],
+        correct: 2 },
+      { q: "A plant uses 6 CO₂ molecules in photosynthesis. How many carbon atoms end up in glucose?",
+        a: ["1","3","12","6"],
+        correct: 3 },
+      { q: "After photosynthesis, the atoms from CO₂ and H₂O are:",
+        a: ["Destroyed to release energy","Lost as heat","Converted into pure energy","Rearranged into glucose and O₂"],
+        correct: 3 },
+      { q: "Is matter conserved in photosynthesis?",
+        a: ["No — matter is converted to energy","No — some atoms are lost as heat","Yes — all atoms from reactants end up in the products","Yes — but only carbon atoms are conserved"],
+        correct: 2 },
+      { q: "A student says: 'Plants get most of their mass from the soil.' Based on conservation of matter, what is the correct source?",
+        a: ["Mostly from water absorbed by roots","Mostly from minerals in the soil","Mostly from CO₂ in the air (carbon atoms)","Equally from soil, air, and water"],
+        correct: 2 },
+      { q: "In the photosynthesis equation, if you count atoms on the left side and the right side, they should be:",
+        a: ["More on the right because energy is added","Fewer on the left because reactants are used up","Equal — the same atoms are just rearranged","Different because light adds new atoms"],
+        correct: 2 },
+      { q: "The oxygen released by a plant during photosynthesis originally came from:",
+        a: ["CO₂ molecules","Minerals in the soil","Glucose molecules","Water (H₂O) molecules that were split"],
+        correct: 3 },
+      { q: "A plant grows larger over time. This increase in mass comes mostly from:",
+        a: ["Water absorbed through roots","Minerals absorbed from soil","Carbon atoms from CO₂ being incorporated into glucose","Nitrogen from the air"],
+        correct: 2 },
+      { q: "Which best describes what happens to matter during photosynthesis?",
+        a: ["Matter is created from light energy","Matter disappears and becomes energy","Atoms are destroyed and new ones are made","Atoms are rearranged — reactants become products"],
+        correct: 3 }
+    ]
+  },
+
+  /* ====================================================
+     LEVEL 4 — TRANSPIRATION & STOMATA
+  ==================================================== */
+  {
+    name: "Transpiration & Stomata",
+    color: "lv4",
+    emoji: "💧",
+    desc: "Water loss and gas exchange",
+    questions: [
+      { q: "What is transpiration?",
+        a: ["The absorption of water by roots","The movement of sugar through phloem","The loss of water vapor from a plant's leaves","The production of glucose during photosynthesis"],
+        correct: 2 },
+      { q: "Through which structure does most transpiration occur?",
+        a: ["Root hairs","Xylem vessels","Chloroplasts","Stomata (pores in leaves)"],
+        correct: 3 },
+      { q: "What are stomata?",
+        a: ["Tubes that carry water upward","Tiny pores in leaves that allow gas exchange and water vapor to escape","Cells that perform photosynthesis","The outer layer of a root"],
+        correct: 1 },
+      { q: "What controls whether stomata open or close?",
+        a: ["Root hair cells","Xylem vessels","Guard cells","Phloem cells"],
+        correct: 2 },
+      { q: "When stomata are OPEN, which gases can move in and out?",
+        a: ["Only water vapor moves out","Only CO₂ moves in","CO₂ moves in; O₂ and water vapor move out","Only O₂ moves out"],
+        correct: 2 },
+      { q: "On a hot, dry day, stomata tend to close. Why?",
+        a: ["To stop photosynthesis permanently","To prevent too much water loss (transpiration)","To block CO₂ from entering","To absorb more sunlight"],
+        correct: 1 },
+      { q: "Transpiration helps pull water upward through the xylem. This is because:",
+        a: ["Water is pumped up by the roots","As water evaporates from leaves, it pulls more water up behind it","Phloem pushes water upward","Stomata actively pump water"],
+        correct: 1 },
+      { q: "If all the stomata on a plant are closed, what process is also slowed down?",
+        a: ["Transpiration only","Transpiration and photosynthesis (less CO₂ enters)","Root water absorption","Sugar transport in phloem"],
+        correct: 1 },
+      { q: "Which environmental condition would increase transpiration the MOST?",
+        a: ["Cold, humid, still air","Hot, dry, windy conditions","Dark, wet conditions","Cool, moist shade"],
+        correct: 1 },
+      { q: "A plant is placed in a sealed plastic bag. Over time, water droplets form on the inside of the bag. This is evidence of:",
+        a: ["Photosynthesis producing water","Respiration releasing water","Transpiration — water vapor leaving the plant","Xylem leaking through the leaves"],
+        correct: 2 }
+    ]
+  },
+
+  /* ====================================================
+     LEVEL 5 — ONION ROOT TIP DIAGRAM VARIATIONS
+  ==================================================== */
+  {
+    name: "Read the Diagram",
+    color: "lv5",
+    emoji: "🏆",
+    desc: "Root tip, mitosis, and cell division questions",
+    questions: [
+      { q: "Students observe onion root tip cells to study mitosis.\n\nWhy is the ROOT TIP the best place to observe mitosis?",
+        a: ["It is where photosynthesis occurs","It is where sexual reproduction occurs","It is where the most water is absorbed","It is where the plant is actively growing (most cell division)"],
+        correct: 3 },
+      { q: "A student looks at an onion root tip under a microscope and sees many cells with visible, condensed chromosomes.\n\nWhat process are these cells undergoing?",
+        a: ["Photosynthesis","Transpiration","Mitosis (cell division)","Meiosis (sexual reproduction)"],
+        correct: 2 },
+      { q: "Most cells in the onion root tip image are NOT showing visible chromosomes — they appear dark and undivided.\n\nWhat stage are MOST cells in?",
+        a: ["Telophase","Anaphase","Prophase","Interphase (not dividing)"],
+        correct: 3 },
+      { q: "A diagram shows a root tip with a zone labeled 'Region of Cell Division' near the very tip.\n\nWhat is happening in this region?",
+        a: ["Cells are absorbing water only","Cells are carrying out photosynthesis","Cells are undergoing mitosis to produce new cells","Cells are dying and being replaced by phloem"],
+        correct: 2 },
+      { q: "A student counts cells in an onion root tip image. She finds 80 cells total, and 20 are in some stage of mitosis.\n\nWhat percentage of cells are dividing?",
+        a: ["80%","10%","25%","50%"],
+        correct: 2 },
+      { q: "Why would a scientist use the ROOT TIP of a plant rather than a leaf to study cell division?",
+        a: ["Roots are easier to see with the naked eye","Leaves divide too quickly to observe","Root tips have actively dividing cells; leaves mostly have mature non-dividing cells","Root cells are larger than leaf cells"],
+        correct: 2 },
+      { q: "In the onion root tip image, a cell is shown with chromosomes lined up in the middle of the cell.\n\nThis cell is in which stage of mitosis?",
+        a: ["Prophase","Telophase","Anaphase","Metaphase"],
+        correct: 3 },
+      { q: "A diagram labels four zones from the tip upward: Zone 1 (tip), Zone 2, Zone 3, Zone 4 (base).\n\nIn which zone would you expect to find the MOST cells undergoing mitosis?",
+        a: ["Zone 4 — farthest from the tip","Zone 3 — middle of the root","Zone 2 — just above the tip","Zone 1 — the very tip (meristem region)"],
+        correct: 3 },
+      { q: "The onion root tip is used to study mitosis because onion cells are eukaryotic and have visible chromosomes.\n\nWhich statement about the chromosomes in these cells is TRUE?",
+        a: ["Each cell has only one chromosome","Chromosomes are only visible between divisions","Chromosomes become visible when the cell condenses them during division","Chromosomes disappear permanently after mitosis"],
+        correct: 2 },
+      { q: "A student observes an onion root tip cell where the cell has pinched into two new cells.\n\nWhich stage just completed?",
+        a: ["Prophase","Metaphase","Anaphase","Telophase / Cytokinesis"],
+        correct: 3 }
+    ]
+  }
+];
+
+/* ============================================================
+   STORAGE
+============================================================ */
+const SK = STORAGE_KEY;
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK))||{};}catch{return{};}}
+function saveAll(d){try{localStorage.setItem(SK,JSON.stringify(d));}catch{}}
+function getStudent(n){const a=loadAll();return a[n]||{plays:0,bestScore:0,bestLevel:0,history:[]};}
+function saveResult(key,score,correct,wrong,levelsCleared,lvBreakdown){
+  const a=loadAll(),s=getStudent(key);
+  const pwHash=a[key]&&a[key].pwHash;  // preserve existing password hash
+  const isNew=score>s.bestScore;
+  s.plays++;
+  if(isNew){s.bestScore=score;s.bestLevel=levelsCleared;}
+  s.history.unshift({date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    score,correct,wrong,levelsCleared,lvBreakdown});
+  if(s.history.length>10)s.history=s.history.slice(0,10);
+  if(pwHash)s.pwHash=pwHash;
+  a[key]=s;saveAll(a);return isNew;
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+let student=null,studentPeriod=null;
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function showLogin(){buildRetList();showScreen('login-screen');}
+function showTeacher(){showScreen('teacher-screen');document.getElementById('tc-data').style.display='none';document.getElementById('tc-pw-gate').style.display='block';document.getElementById('tc-pw').value='';document.getElementById('tc-wrong').style.display='none';}
+function logout(){student=null;showLogin();}
+
+/* ============================================================
+   LOGIN
+============================================================ */
+
+/* Simple hash so passwords aren't stored as plain text */
+function hashPw(str){
+  let h=5381;
+  for(let i=0;i<str.length;i++) h=((h<<5)+h)^str.charCodeAt(i);
+  return(h>>>0).toString(36);
+}
+
+function getStudentKey(name,period){return name.trim()+'|'+period;}
+
+function studentExists(key){return !!loadAll()[key];}
+
+function buildRetList(){
+  const a=loadAll();
+  const keys=Object.keys(a).sort((x,y)=>{
+    const[xn,xp]=x.split('|');const[yn,yp]=y.split('|');
+    return(xp||'').localeCompare(yp||'')||xn.localeCompare(yn);
+  });
+  const sec=document.getElementById('ret-section'),list=document.getElementById('ret-list');
+  if(!keys.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML=keys.slice(0,10).map(key=>{
+    const s=a[key];
+    const[nm,per]=key.split('|');
+    return`<div class="ri" onclick="quickLogin('${nm.replace(/'/g,"\\'")}','${(per||'').replace(/'/g,"\\'")}')">
+      <div><div class="ri-name">${nm}</div><div class="ri-meta">${per||''} · ${s.plays} play${s.plays!==1?'s':''} · Best Lv${s.bestLevel}</div></div>
+      <div class="ri-score">${s.bestScore} pts</div></div>`;
+  }).join('');
+}
+
+function populatePeriods(){
+  const sel=document.getElementById('period-in');
+  PERIODS.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;sel.appendChild(o);});
+}
+
+/* Called whenever name or period changes — shows new vs returning state */
+function checkStudentStatus(){
+  const name=document.getElementById('name-in').value.trim();
+  const period=document.getElementById('period-in').value;
+  const status=document.getElementById('student-status');
+  const pwGroup=document.getElementById('pw-group');
+  const pwNewGroup=document.getElementById('pw-new-group');
+  const btn=document.getElementById('login-btn');
+  const heading=document.getElementById('login-heading');
+
+  if(!name||!period){
+    status.style.display='none';
+    pwGroup.style.display='none';
+    pwNewGroup.style.display='none';
+    return;
+  }
+
+  const key=getStudentKey(name,period);
+  if(studentExists(key)){
+    // Returning student
+    status.style.display='block';
+    status.style.background='#e8f5e9';status.style.border='1.5px solid #a5d6a7';status.style.color='#2e7d32';
+    status.textContent='👋 Welcome back! Enter your password to continue.';
+    pwGroup.style.display='block';
+    pwNewGroup.style.display='none';
+    heading.textContent='👤 SIGN IN';
+    btn.textContent='SIGN IN →';
+  } else {
+    // New student
+    status.style.display='block';
+    status.style.background='#e3f2fd';status.style.border='1.5px solid #90caf9';status.style.color='#1565c0';
+    status.textContent='✨ New student! Create a password for your account.';
+    pwGroup.style.display='none';
+    pwNewGroup.style.display='block';
+    heading.textContent='✨ CREATE ACCOUNT';
+    btn.textContent='CREATE ACCOUNT →';
+  }
+}
+
+function loginStudent(){
+  const name=document.getElementById('name-in').value.trim();
+  const period=document.getElementById('period-in').value;
+  let ok=true;
+
+  // Reset all errors
+  ['name-err','period-err','pw-err','pw-new-err','pw-confirm-err']
+    .forEach(id=>document.getElementById(id).style.display='none');
+
+  // Validate name
+  if(!name){
+    document.getElementById('name-err').textContent='Please enter your full name.';
+    document.getElementById('name-err').style.display='block';ok=false;
+  } else if(name.length<2){
+    document.getElementById('name-err').textContent='Name must be at least 2 characters.';
+    document.getElementById('name-err').style.display='block';ok=false;
+  } else if(BANNED_NAMES.includes(name.toLowerCase())){
+    document.getElementById('name-err').textContent='That name is not allowed. Use your real name.';
+    document.getElementById('name-err').style.display='block';ok=false;
+  }
+
+  // Validate period
+  if(!period){document.getElementById('period-err').style.display='block';ok=false;}
+
+  if(!ok)return;
+
+  const key=getStudentKey(name,period);
+
+  if(studentExists(key)){
+    // RETURNING — check password
+    const pw=document.getElementById('pw-in').value;
+    const stored=loadAll()[key].pwHash;
+    if(hashPw(pw)!==stored){
+      document.getElementById('pw-err').style.display='block';return;
+    }
+  } else {
+    // NEW — validate and save password
+    const pw=document.getElementById('pw-new-in').value;
+    const confirm=document.getElementById('pw-confirm-in').value;
+    if(pw.length<3){
+      document.getElementById('pw-new-err').style.display='block';return;
+    }
+    if(pw!==confirm){
+      document.getElementById('pw-confirm-err').style.display='block';return;
+    }
+    // Save new student record with hashed password
+    const all=loadAll();
+    all[key]={name,period,pwHash:hashPw(pw),plays:0,bestScore:0,bestLevel:0,history:[]};
+    saveAll(all);
+    buildRetList();
+  }
+
+  student=name;studentPeriod=period;
+  openStart();
+}
+
+function quickLogin(name,period){
+  document.getElementById('name-in').value=name;
+  document.getElementById('period-in').value=period;
+  checkStudentStatus();
+  // Focus the right password field
+  setTimeout(()=>{
+    const el=document.getElementById('pw-in');
+    if(el&&el.closest('#pw-group').style.display!=='none')el.focus();
+  },50);
+}
+
+function openStart(){
+  document.getElementById('welcome-name').textContent=student;
+  document.getElementById('welcome-period').textContent=studentPeriod;
+  const key=getStudentKey(student,studentPeriod);
+  const s=getStudent(key);
+  const b=document.getElementById('hist-banner');
+  if(s.plays>0){b.classList.remove('hidden');document.getElementById('hist-best').textContent=s.bestScore+' pts (Lv'+s.bestLevel+')';document.getElementById('hist-plays').textContent=s.plays;}
+  else b.classList.add('hidden');
+  showScreen('start-screen');
+}
+
+// Run init directly — DOMContentLoaded is unreliable inside Canvas iframes
+(function init(){
+  populatePeriods();
+  buildRetList();
+  document.getElementById('name-in').addEventListener('input', checkStudentStatus);
+  document.getElementById('period-in').addEventListener('change', checkStudentStatus);
+  document.getElementById('pw-in').addEventListener('keydown', e=>{ if(e.key==='Enter') loginStudent(); });
+  document.getElementById('pw-confirm-in').addEventListener('keydown', e=>{ if(e.key==='Enter') loginStudent(); });
+})();
+
+/* ============================================================
+   GAME STATE
+============================================================ */
+let level,qIdx,timeLeft,score,correct,wrong,sel,submitted,timer,gameover;
+let lvBreakdown=[];   // per-level {correct,wrong,pts}
+let lvScore=0,lvCorrect=0,lvWrong=0;  // current level running totals
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startGame(){
+  level=0;qIdx=0;timeLeft=START_SECS;score=0;correct=0;wrong=0;gameover=false;
+  lvBreakdown=[];lvScore=0;lvCorrect=0;lvWrong=0;
+  document.getElementById('q-total')||null;
+  showScreen('game-screen');
+  loadQ();
+  timer=setInterval(tick,1000);
+}
+
+function getLvClass(lv){return'lv'+(lv+1);}
+
+function loadQ(){
+  if(qIdx>=10){levelComplete();return;}
+  const lv=LEVELS[level],q=lv.questions[qIdx];
+  sel=null;submitted=false;
+  // top bar
+  document.getElementById('q-num').textContent=qIdx+1;
+  document.getElementById('lv-indicator').textContent=' · LV'+(level+1);
+  // progress bar — across all questions (max 50)
+  const total=(level*10)+qIdx;
+  document.getElementById('pb-inner').style.width=(total/50*100)+'%';
+  // level chip
+  const chip=document.getElementById('lv-chip');
+  chip.className='lv-chip '+getLvClass(level);
+  chip.textContent='LEVEL '+(level+1)+' — '+lv.name;
+  // diagram (Level 5 only)
+  const diag=document.getElementById('q-diagram');
+  if(q.svg){diag.style.display='block';diag.innerHTML=q.svg;}else{diag.style.display='none';diag.innerHTML='';}
+  // question
+  document.getElementById('q-text').textContent=q.q;
+  // feedback reset
+  document.getElementById('fb-text').textContent='';
+  document.getElementById('fb-text').className='fb-text';
+  const sb=document.getElementById('sub-btn');
+  sb.disabled=true;sb.classList.remove('done');sb.textContent='SUBMIT';sb.onclick=submitAns;
+  hideFB();
+  // shuffle answers
+  const order=shuffle([0,1,2,3]);
+  for(let i=0;i<4;i++){
+    const b=document.getElementById('c'+i);
+    b.textContent=q.a[order[i]];b.dataset.orig=order[i];
+    b.className='choice-btn';b.disabled=false;
+  }
+}
+
+function pick(i){
+  if(submitted)return;
+  sel=i;
+  for(let j=0;j<4;j++)document.getElementById('c'+j).className='choice-btn'+(j===i?' selected':'');
+  document.getElementById('sub-btn').disabled=false;
+}
+
+function submitAns(){
+  if(sel===null||submitted)return;
+  submitted=true;
+  const q=LEVELS[level].questions[qIdx];
+  const isOk=parseInt(document.getElementById('c'+sel).dataset.orig)===q.correct;
+  for(let i=0;i<4;i++){
+    const b=document.getElementById('c'+i);b.disabled=true;
+    if(parseInt(b.dataset.orig)===q.correct)b.classList.add('correct-reveal');
+    else if(i===sel&&!isOk)b.classList.add('wrong-reveal');
+  }
+  const sb=document.getElementById('sub-btn');
+  sb.classList.add('done');sb.textContent='NEXT →';sb.disabled=false;sb.onclick=nextQ;
+  if(isOk){
+    correct++;lvCorrect++;timeLeft+=SECS_RIGHT;score+=SECS_RIGHT;lvScore+=SECS_RIGHT;
+    showFB(true);flash('+'+SECS_RIGHT+'s');
+    const ft=document.getElementById('fb-text');ft.textContent='✓ CORRECT!';ft.className='fb-text correct';
+  } else {
+    wrong++;lvWrong++;timeLeft=Math.max(0,timeLeft-SECS_WRONG);
+    showFB(false);flash('−'+SECS_WRONG+'s');
+    const ft=document.getElementById('fb-text');ft.textContent='✗ INCORRECT';ft.className='fb-text wrong';
+  }
+  updateTimer();document.getElementById('score-disp').textContent=score;
+}
+
+function nextQ(){hideFB();qIdx++;loadQ();}
+
+function tick(){
+  if(gameover)return;
+  timeLeft--;updateTimer();
+  if(timeLeft<=0){clearInterval(timer);endGame(false);}
+}
+function updateTimer(){
+  const m=Math.floor(timeLeft/60),s=timeLeft%60;
+  document.getElementById('timer-txt').textContent=m>0?`${m}:${s.toString().padStart(2,'0')}`:s;
+  document.getElementById('timer-disp').className='timer-disp'+(timeLeft<=10?' urgent':'');
+}
+
+/* ============================================================
+   LEVEL COMPLETE
+============================================================ */
+function levelComplete(){
+  clearInterval(timer);
+  lvBreakdown.push({level:level,correct:lvCorrect,wrong:lvWrong,pts:lvScore});
+
+  const lv=LEVELS[level];
+  document.getElementById('lc-title').textContent='LEVEL '+(level+1)+' CLEAR!';
+  document.getElementById('lc-sub').textContent=lv.emoji+' '+lv.name;
+  document.getElementById('lc-badge').textContent=level===4?'🏆':lv.emoji;
+  document.getElementById('lc-correct').textContent=lvCorrect;
+  document.getElementById('lc-wrong').textContent=lvWrong;
+  document.getElementById('lc-pts').textContent=lvScore;
+
+  // dots
+  const dots=document.getElementById('lc-dots');
+  dots.innerHTML=[0,1,2,3,4].map(i=>`<div class="ldot${i<level+1?' done':i===level?' active':''}"></div>`).join('');
+
+  // bonus applied
+  timeLeft+=LEVEL_BONUS_SECS;
+  score+=LEVEL_BONUS_SECS;
+
+  if(level===4){
+    // all done!
+    document.getElementById('next-preview').style.display='none';
+    document.getElementById('btn-next-lv').textContent='SEE RESULTS 🏆';
+    document.getElementById('btn-next-lv').onclick=()=>endGame(true);
+    showScreen('level-complete');
+  } else {
+    const next=LEVELS[level+1];
+    const chip=document.getElementById('nlp-chip');
+    chip.className='nlp-chip lv'+(level+2);
+    chip.textContent='LEVEL '+(level+2);
+    document.getElementById('nlp-desc').textContent=next.emoji+' '+next.name+' — '+next.desc;
+    document.getElementById('btn-next-lv').textContent='START LEVEL '+(level+2)+' →';
+    document.getElementById('btn-next-lv').onclick=startNextLevel;
+    document.getElementById('next-preview').style.display='block';
+    showScreen('level-complete');
+  }
+}
+
+function startNextLevel(){
+  level++;qIdx=0;lvScore=0;lvCorrect=0;lvWrong=0;submitted=false;sel=null;
+  showScreen('game-screen');
+  loadQ();
+  timer=setInterval(tick,1000);
+}
+
+/* ============================================================
+   END GAME
+============================================================ */
+function endGame(completed){
+  gameover=true;clearInterval(timer);
+  const key=getStudentKey(student,studentPeriod);
+  const levelsCleared=completed?5:level;
+  const isNew=saveResult(key,score,correct,wrong,levelsCleared,lvBreakdown);
+
+  document.getElementById('end-title').textContent=completed?'🏆 QUEST COMPLETE!':'⏰ TIME\'S UP!';
+  document.getElementById('end-student').textContent=student+' · '+studentPeriod;
+
+  const gon=document.getElementById('gameover-note');
+  if(!completed){
+    gon.style.display='block';
+    document.getElementById('fail-level').textContent=level+1;
+  } else gon.style.display='none';
+
+  document.getElementById('final-score').textContent=score;
+  document.getElementById('final-sub').textContent=correct+' correct × '+SECS_RIGHT+'s each';
+  document.getElementById('tot-correct').textContent=correct;
+  document.getElementById('tot-wrong').textContent=wrong;
+  document.getElementById('lv-reached').textContent=levelsCleared+'/5';
+
+  const pct=50>0?Math.round(correct/50*100):0;
+  let grade='😅 Keep Practicing!';
+  if(completed)grade='🏆 DNA Master!';
+  else if(pct>=70)grade='⭐ Great Work!';
+  else if(pct>=50)grade='👍 Good Effort!';
+  document.getElementById('grade-badge').textContent=grade;
+
+  const pb=document.getElementById('pb-badge');
+  if(isNew&&score>0)pb.classList.remove('hidden');else pb.classList.add('hidden');
+
+  document.getElementById('ls-rows').innerHTML=lvBreakdown.map(b=>{
+    const lv=LEVELS[b.level];
+    return`<div class="ls-row">
+      <span class="ls-lv">${lv.emoji} Level ${b.level+1}: ${lv.name}</span>
+      <span>${b.correct}/10 correct</span>
+      <span class="ls-score">${b.pts} pts</span>
+      <span class="ls-check">✓</span>
+    </div>`;
+  }).join('')||'<div style="color:#aab;font-size:.82rem;padding:6px 0;">No levels completed.</div>';
+
+  const s=getStudent(key);
+  document.getElementById('hist-rows').innerHTML=s.history.map(h=>
+    `<div class="hr-row">
+      <span class="hr-date">${h.date}</span>
+      <span style="color:#888;font-size:.75rem;">${h.correct}/50 · Lv${h.levelsCleared}</span>
+      <span class="hr-score">${h.score} pts</span>
+    </div>`
+  ).join('')||'<div style="color:#aab;font-size:.82rem;padding:6px 0;">No history yet.</div>';
+
+  document.getElementById('copy-btn').textContent='📋 COPY SCORE';
+  document.getElementById('copy-btn').classList.remove('copied');
+  showScreen('end-screen');
+}
+
+function goStart(){openStart();}
+
+function copyScore(){
+  const key=getStudentKey(student,studentPeriod);
+  const now=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const s=getStudent(key);
+  const lvLines=lvBreakdown.map(b=>`  Level ${b.level+1} (${LEVELS[b.level].name}): ${b.correct}/10 correct → ${b.pts} pts`).join('\n');
+  const txt=`${QUIZ_TITLE}
+Student: ${student}
+Period: ${studentPeriod}
+Date: ${now}
+Final Score: ${score} points
+Correct: ${correct}/50 (${Math.round(correct/50*100)}%)
+Levels Cleared: ${lvBreakdown.length}/5
+${lvLines}
+Personal Best: ${s.bestScore} pts`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const b=document.getElementById('copy-btn');
+    b.textContent='✓ COPIED!';b.classList.add('copied');
+    setTimeout(()=>{b.textContent='📋 COPY SCORE';b.classList.remove('copied');},3000);
+  }).catch(()=>prompt("Copy this score:",txt));
+}
+
+/* ============================================================
+   VISUAL HELPERS
+============================================================ */
+function showFB(ok){
+  const o=document.getElementById('fb-overlay'),ic=document.getElementById('fb-icon');
+  o.className='fb-overlay show '+(ok?'cor':'wrg');ic.textContent=ok?'✓':'✗';
+  setTimeout(hideFB,600);
+}
+function hideFB(){document.getElementById('fb-overlay').className='fb-overlay';}
+function flash(txt){
+  const e=document.createElement('div');e.className='pts-flash '+(txt.startsWith('+')?'pos':'neg');e.textContent=txt;
+  document.getElementById('game-screen').appendChild(e);setTimeout(()=>e.remove(),1000);
+}
+
+/* ============================================================
+   TEACHER VIEW
+============================================================ */
+function unlockTC(){
+  if(document.getElementById('tc-pw').value===TEACHER_PW){
+    document.getElementById('tc-pw-gate').style.display='none';
+    document.getElementById('tc-wrong').style.display='none';
+    document.getElementById('tc-data').style.display='block';
+    buildTC();
+  } else {
+    document.getElementById('tc-wrong').style.display='block';
+    document.getElementById('tc-pw').value='';
+  }
+}
+function buildTC(){
+  const a=loadAll();
+  // Sort by period then name
+  const entries=Object.entries(a).sort((x,y)=>{
+    const[xn,xp]=x[0].split('|');const[yn,yp]=y[0].split('|');
+    return(xp||'').localeCompare(yp||'')||xn.localeCompare(yn);
+  });
+  const students=entries.map(([key,s])=>{const[nm,per]=key.split('|');return{...s,nm,per:per||'—'};});
+  const totalPlays=students.reduce((s,x)=>s+x.plays,0);
+  const avgScore=students.length?Math.round(students.reduce((s,x)=>s+x.bestScore,0)/students.length):0;
+  const avgLv=students.length?Math.round(students.reduce((s,x)=>s+x.bestLevel,0)/students.length*10)/10:0;
+  document.getElementById('tc-stats').innerHTML=`
+    <div class="ts"><div class="tv">${students.length}</div><div class="tl">STUDENTS</div></div>
+    <div class="ts"><div class="tv">${totalPlays}</div><div class="tl">PLAYS</div></div>
+    <div class="ts"><div class="tv">${avgScore}</div><div class="tl">AVG SCORE</div></div>
+    <div class="ts"><div class="tv">${avgLv}</div><div class="tl">AVG LVL</div></div>`;
+  document.getElementById('tc-tbody').innerHTML=students.length?students.map(s=>{
+    const last=s.history[0];
+    return`<tr>
+      <td>${s.nm}</td>
+      <td style="color:#555;font-weight:700;">${s.per}</td>
+      <td class="td-s">${s.bestScore}</td>
+      <td>${s.plays}</td>
+      <td>Level ${s.bestLevel}/5</td>
+      <td>${last?last.date:'—'}</td></tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;color:#aab;padding:18px;">No student data yet.</td></tr>';
+}
+function exportCSV(){
+  const a=loadAll();
+  const rows=[['Student','Period','Best Score','Plays','Best Level','Last Played']];
+  Object.entries(a).sort((x,y)=>{
+    const[xn,xp]=x[0].split('|');const[yn,yp]=y[0].split('|');
+    return(xp||'').localeCompare(yp||'')||xn.localeCompare(yn);
+  }).forEach(([key,s])=>{
+    const[nm,per]=key.split('|');
+    const last=s.history[0];
+    rows.push([nm,per||'',s.bestScore,s.plays,'Level '+s.bestLevel+'/5',last?last.date:'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const el=document.createElement('a');el.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  el.download='dna_quest_scores_'+new Date().toISOString().slice(0,10)+'.csv';el.click();
+}
+function clearData(){
+  if(confirm('Delete ALL student scores from this device?')){localStorage.removeItem(SK);buildTC();alert('Cleared.');}
+}
+
+/* stars */
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2.2+0.4;
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--d:${1.5+Math.random()*3}s;`;
+    c.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>
